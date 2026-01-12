@@ -21,13 +21,7 @@ const Index = () => {
   const [newShipmentCargoType, setNewShipmentCargoType] = useState('');
   const [newShipmentContact, setNewShipmentContact] = useState('');
   const [newShipmentNotes, setNewShipmentNotes] = useState('');
-
-  const [newShipmentFrom, setNewShipmentFrom] = useState('');
-  const [newShipmentTo, setNewShipmentTo] = useState('');
-  const [newShipmentWeight, setNewShipmentWeight] = useState('');
-  const [newShipmentCargoType, setNewShipmentCargoType] = useState('');
-  const [newShipmentContact, setNewShipmentContact] = useState('');
-  const [newShipmentNotes, setNewShipmentNotes] = useState('');
+  
   const [calcDistance, setCalcDistance] = useState('500');
   const [calcWeight, setCalcWeight] = useState('1000');
   const [calcCargoType, setCalcCargoType] = useState('standard');
