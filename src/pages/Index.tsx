@@ -7,10 +7,27 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
+import { useToast } from '@/hooks/use-toast';
 import Icon from '@/components/ui/icon';
 
 const Index = () => {
   const [activeView, setActiveView] = useState<'landing' | 'crm'>('landing');
+  const { toast } = useToast();
+
+  const [newShipmentFrom, setNewShipmentFrom] = useState('');
+  const [newShipmentTo, setNewShipmentTo] = useState('');
+  const [newShipmentWeight, setNewShipmentWeight] = useState('');
+  const [newShipmentCargoType, setNewShipmentCargoType] = useState('');
+  const [newShipmentContact, setNewShipmentContact] = useState('');
+  const [newShipmentNotes, setNewShipmentNotes] = useState('');
+
+  const [newShipmentFrom, setNewShipmentFrom] = useState('');
+  const [newShipmentTo, setNewShipmentTo] = useState('');
+  const [newShipmentWeight, setNewShipmentWeight] = useState('');
+  const [newShipmentCargoType, setNewShipmentCargoType] = useState('');
+  const [newShipmentContact, setNewShipmentContact] = useState('');
+  const [newShipmentNotes, setNewShipmentNotes] = useState('');
   const [calcDistance, setCalcDistance] = useState('500');
   const [calcWeight, setCalcWeight] = useState('1000');
   const [calcCargoType, setCalcCargoType] = useState('standard');
@@ -429,16 +446,154 @@ const Index = () => {
             </div>
 
             <Tabs defaultValue="shipments" className="space-y-6">
-              <TabsList className="grid w-full max-w-md grid-cols-2">
+              <TabsList className="grid w-full max-w-2xl grid-cols-3">
                 <TabsTrigger value="shipments">
                   <Icon name="Package" size={16} className="mr-2" />
                   Грузы
+                </TabsTrigger>
+                <TabsTrigger value="new-request">
+                  <Icon name="Plus" size={16} className="mr-2" />
+                  Новая заявка
                 </TabsTrigger>
                 <TabsTrigger value="map">
                   <Icon name="Map" size={16} className="mr-2" />
                   Карта
                 </TabsTrigger>
               </TabsList>
+
+              <TabsContent value="new-request">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Новая заявка на грузоперевозку</CardTitle>
+                    <CardDescription>Заполните форму для создания новой заявки на доставку груза</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <form onSubmit={(e) => {
+                      e.preventDefault();
+                      if (!newShipmentFrom || !newShipmentTo || !newShipmentWeight || !newShipmentCargoType || !newShipmentContact) {
+                        toast({
+                          title: 'Ошибка',
+                          description: 'Заполните все обязательные поля',
+                          variant: 'destructive'
+                        });
+                        return;
+                      }
+                      toast({
+                        title: 'Заявка создана!',
+                        description: `Заявка на маршрут ${newShipmentFrom} → ${newShipmentTo} успешно создана. Номер заявки: SHP-${Math.floor(Math.random() * 9000) + 1000}`
+                      });
+                      setNewShipmentFrom('');
+                      setNewShipmentTo('');
+                      setNewShipmentWeight('');
+                      setNewShipmentCargoType('');
+                      setNewShipmentContact('');
+                      setNewShipmentNotes('');
+                    }} className="space-y-6">
+                      <div className="grid md:grid-cols-2 gap-6">
+                        <div className="space-y-2">
+                          <Label htmlFor="from">Откуда <span className="text-red-500">*</span></Label>
+                          <Input
+                            id="from"
+                            placeholder="Москва"
+                            value={newShipmentFrom}
+                            onChange={(e) => setNewShipmentFrom(e.target.value)}
+                            required
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="to">Куда <span className="text-red-500">*</span></Label>
+                          <Input
+                            id="to"
+                            placeholder="Владивосток"
+                            value={newShipmentTo}
+                            onChange={(e) => setNewShipmentTo(e.target.value)}
+                            required
+                          />
+                        </div>
+                      </div>
+
+                      <div className="grid md:grid-cols-2 gap-6">
+                        <div className="space-y-2">
+                          <Label htmlFor="weight">Вес груза (кг) <span className="text-red-500">*</span></Label>
+                          <Input
+                            id="weight"
+                            type="number"
+                            placeholder="1000"
+                            value={newShipmentWeight}
+                            onChange={(e) => setNewShipmentWeight(e.target.value)}
+                            required
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="cargoType">Тип груза <span className="text-red-500">*</span></Label>
+                          <Select value={newShipmentCargoType} onValueChange={setNewShipmentCargoType} required>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Выберите тип груза" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="standard">Стандартный</SelectItem>
+                              <SelectItem value="fragile">Хрупкий</SelectItem>
+                              <SelectItem value="perishable">Скоропортящийся</SelectItem>
+                              <SelectItem value="hazardous">Опасный</SelectItem>
+                              <SelectItem value="oversized">Негабаритный</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="contact">Контактная информация <span className="text-red-500">*</span></Label>
+                        <Input
+                          id="contact"
+                          placeholder="+7 (999) 123-45-67 или email@example.com"
+                          value={newShipmentContact}
+                          onChange={(e) => setNewShipmentContact(e.target.value)}
+                          required
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="notes">Дополнительные примечания</Label>
+                        <Textarea
+                          id="notes"
+                          placeholder="Особые требования к перевозке, условия погрузки/разгрузки и т.д."
+                          value={newShipmentNotes}
+                          onChange={(e) => setNewShipmentNotes(e.target.value)}
+                          rows={4}
+                        />
+                      </div>
+
+                      <div className="bg-slate-50 p-4 rounded-lg">
+                        <div className="flex items-start gap-3">
+                          <Icon name="Info" size={20} className="text-primary mt-0.5" />
+                          <div className="text-sm text-muted-foreground">
+                            <p className="font-semibold text-foreground mb-1">Информация о расчете стоимости</p>
+                            <p>После создания заявки наш менеджер свяжется с вами в течение 30 минут для уточнения деталей и расчета точной стоимости доставки.</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex gap-4">
+                        <Button type="submit" className="flex-1">
+                          <Icon name="Send" size={18} className="mr-2" />
+                          Отправить заявку
+                        </Button>
+                        <Button type="button" variant="outline" onClick={() => {
+                          setNewShipmentFrom('');
+                          setNewShipmentTo('');
+                          setNewShipmentWeight('');
+                          setNewShipmentCargoType('');
+                          setNewShipmentContact('');
+                          setNewShipmentNotes('');
+                        }}>
+                          <Icon name="RotateCcw" size={18} className="mr-2" />
+                          Очистить
+                        </Button>
+                      </div>
+                    </form>
+                  </CardContent>
+                </Card>
+              </TabsContent>
 
               <TabsContent value="shipments" className="space-y-4">
                 {shipments.map((shipment) => (
