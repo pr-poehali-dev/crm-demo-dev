@@ -17,10 +17,28 @@ const Index = () => {
 
   const [newShipmentFrom, setNewShipmentFrom] = useState('');
   const [newShipmentTo, setNewShipmentTo] = useState('');
+  const [newShipmentDistance, setNewShipmentDistance] = useState('');
   const [newShipmentWeight, setNewShipmentWeight] = useState('');
   const [newShipmentCargoType, setNewShipmentCargoType] = useState('');
+  const [newShipmentUrgency, setNewShipmentUrgency] = useState('normal');
   const [newShipmentContact, setNewShipmentContact] = useState('');
   const [newShipmentNotes, setNewShipmentNotes] = useState('');
+  const [newShipmentPrice, setNewShipmentPrice] = useState<number | null>(null);
+
+  const calculateNewShipmentPrice = () => {
+    const distance = parseFloat(newShipmentDistance) || 0;
+    const weight = parseFloat(newShipmentWeight) || 0;
+    if (distance === 0 || weight === 0) {
+      setNewShipmentPrice(null);
+      return;
+    }
+    const basePrice = distance * 35;
+    const weightMultiplier = weight > 5000 ? 1.5 : weight > 2000 ? 1.3 : 1;
+    const typeMultiplier = newShipmentCargoType === 'fragile' ? 1.4 : newShipmentCargoType === 'hazardous' ? 1.6 : newShipmentCargoType === 'perishable' ? 1.5 : newShipmentCargoType === 'oversized' ? 1.7 : 1;
+    const urgencyMultiplier = newShipmentUrgency === 'urgent' ? 1.6 : newShipmentUrgency === 'express' ? 2 : 1;
+    const total = Math.round(basePrice * weightMultiplier * typeMultiplier * urgencyMultiplier);
+    setNewShipmentPrice(total);
+  };
   
   const [calcDistance, setCalcDistance] = useState('500');
   const [calcWeight, setCalcWeight] = useState('1000');
@@ -464,7 +482,7 @@ const Index = () => {
                   <CardContent>
                     <form onSubmit={(e) => {
                       e.preventDefault();
-                      if (!newShipmentFrom || !newShipmentTo || !newShipmentWeight || !newShipmentCargoType || !newShipmentContact) {
+                      if (!newShipmentFrom || !newShipmentTo || !newShipmentDistance || !newShipmentWeight || !newShipmentCargoType || !newShipmentContact) {
                         toast({
                           title: 'Ошибка',
                           description: 'Заполните все обязательные поля',
@@ -478,12 +496,15 @@ const Index = () => {
                       });
                       setNewShipmentFrom('');
                       setNewShipmentTo('');
+                      setNewShipmentDistance('');
                       setNewShipmentWeight('');
                       setNewShipmentCargoType('');
+                      setNewShipmentUrgency('normal');
                       setNewShipmentContact('');
                       setNewShipmentNotes('');
+                      setNewShipmentPrice(null);
                     }} className="space-y-6">
-                      <div className="grid md:grid-cols-2 gap-6">
+                      <div className="grid md:grid-cols-3 gap-4">
                         <div className="space-y-2">
                           <Label htmlFor="from">Откуда <span className="text-red-500">*</span></Label>
                           <Input
@@ -504,9 +525,23 @@ const Index = () => {
                             required
                           />
                         </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="distance">Расстояние (км) <span className="text-red-500">*</span></Label>
+                          <Input
+                            id="distance"
+                            type="number"
+                            placeholder="500"
+                            value={newShipmentDistance}
+                            onChange={(e) => {
+                              setNewShipmentDistance(e.target.value);
+                              setTimeout(calculateNewShipmentPrice, 100);
+                            }}
+                            required
+                          />
+                        </div>
                       </div>
 
-                      <div className="grid md:grid-cols-2 gap-6">
+                      <div className="grid md:grid-cols-3 gap-4">
                         <div className="space-y-2">
                           <Label htmlFor="weight">Вес груза (кг) <span className="text-red-500">*</span></Label>
                           <Input
@@ -514,22 +549,44 @@ const Index = () => {
                             type="number"
                             placeholder="1000"
                             value={newShipmentWeight}
-                            onChange={(e) => setNewShipmentWeight(e.target.value)}
+                            onChange={(e) => {
+                              setNewShipmentWeight(e.target.value);
+                              setTimeout(calculateNewShipmentPrice, 100);
+                            }}
                             required
                           />
                         </div>
                         <div className="space-y-2">
                           <Label htmlFor="cargoType">Тип груза <span className="text-red-500">*</span></Label>
-                          <Select value={newShipmentCargoType} onValueChange={setNewShipmentCargoType} required>
+                          <Select value={newShipmentCargoType} onValueChange={(val) => {
+                            setNewShipmentCargoType(val);
+                            setTimeout(calculateNewShipmentPrice, 100);
+                          }} required>
                             <SelectTrigger>
                               <SelectValue placeholder="Выберите тип груза" />
                             </SelectTrigger>
                             <SelectContent>
                               <SelectItem value="standard">Стандартный</SelectItem>
-                              <SelectItem value="fragile">Хрупкий</SelectItem>
-                              <SelectItem value="perishable">Скоропортящийся</SelectItem>
-                              <SelectItem value="hazardous">Опасный</SelectItem>
-                              <SelectItem value="oversized">Негабаритный</SelectItem>
+                              <SelectItem value="fragile">Хрупкий (+40%)</SelectItem>
+                              <SelectItem value="perishable">Скоропортящийся (+50%)</SelectItem>
+                              <SelectItem value="hazardous">Опасный (+60%)</SelectItem>
+                              <SelectItem value="oversized">Негабаритный (+70%)</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="urgency">Срочность</Label>
+                          <Select value={newShipmentUrgency} onValueChange={(val) => {
+                            setNewShipmentUrgency(val);
+                            setTimeout(calculateNewShipmentPrice, 100);
+                          }}>
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="normal">Обычная</SelectItem>
+                              <SelectItem value="urgent">Срочная (+60%)</SelectItem>
+                              <SelectItem value="express">Экспресс (+100%)</SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
@@ -545,6 +602,19 @@ const Index = () => {
                           required
                         />
                       </div>
+
+                      {newShipmentPrice !== null && (
+                        <div className="p-4 bg-primary/5 border-2 border-primary rounded-lg animate-in fade-in slide-in-from-top-2">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <p className="text-sm text-muted-foreground mb-1">Предварительная стоимость</p>
+                              <p className="text-3xl font-bold text-primary">{newShipmentPrice.toLocaleString('ru-RU')} ₽</p>
+                            </div>
+                            <Icon name="Calculator" size={40} className="text-primary opacity-20" />
+                          </div>
+                          <p className="text-xs text-muted-foreground mt-2">Расчет основан на указанных данных. Точная стоимость будет рассчитана менеджером.</p>
+                        </div>
+                      )}
 
                       <div className="space-y-2">
                         <Label htmlFor="notes">Дополнительные примечания</Label>
@@ -575,10 +645,13 @@ const Index = () => {
                         <Button type="button" variant="outline" onClick={() => {
                           setNewShipmentFrom('');
                           setNewShipmentTo('');
+                          setNewShipmentDistance('');
                           setNewShipmentWeight('');
                           setNewShipmentCargoType('');
+                          setNewShipmentUrgency('normal');
                           setNewShipmentContact('');
                           setNewShipmentNotes('');
+                          setNewShipmentPrice(null);
                         }}>
                           <Icon name="RotateCcw" size={18} className="mr-2" />
                           Очистить
