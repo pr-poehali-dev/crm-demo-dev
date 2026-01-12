@@ -4,10 +4,29 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import Icon from '@/components/ui/icon';
 
 const Index = () => {
   const [activeView, setActiveView] = useState<'landing' | 'crm'>('landing');
+  const [calcDistance, setCalcDistance] = useState('500');
+  const [calcWeight, setCalcWeight] = useState('1000');
+  const [calcCargoType, setCalcCargoType] = useState('standard');
+  const [calcUrgency, setCalcUrgency] = useState('normal');
+  const [calculatedPrice, setCalculatedPrice] = useState<number | null>(null);
+
+  const calculatePrice = () => {
+    const distance = parseFloat(calcDistance) || 0;
+    const weight = parseFloat(calcWeight) || 0;
+    const basePrice = distance * 35;
+    const weightMultiplier = weight > 5000 ? 1.5 : weight > 2000 ? 1.3 : 1;
+    const typeMultiplier = calcCargoType === 'fragile' ? 1.4 : calcCargoType === 'express' ? 1.8 : 1;
+    const urgencyMultiplier = calcUrgency === 'urgent' ? 1.6 : calcUrgency === 'express' ? 2 : 1;
+    const total = Math.round(basePrice * weightMultiplier * typeMultiplier * urgencyMultiplier);
+    setCalculatedPrice(total);
+  };
 
   const shipments = [
     { id: 'SHP-2401', from: 'Москва', to: 'Владивосток', status: 'В пути', progress: 65, lat: 55.7558, lng: 37.6173, cost: 125000 },
@@ -48,6 +67,7 @@ const Index = () => {
               </div>
               <div className="hidden md:flex items-center gap-6">
                 <a href="#about" className="text-sm hover:text-primary transition-colors">О платформе</a>
+                <a href="#calculator" className="text-sm hover:text-primary transition-colors">Калькулятор</a>
                 <a href="#pricing" className="text-sm hover:text-primary transition-colors">Тарифы</a>
                 <a href="#faq" className="text-sm hover:text-primary transition-colors">FAQ</a>
                 <a href="#contacts" className="text-sm hover:text-primary transition-colors">Контакты</a>
@@ -122,6 +142,109 @@ const Index = () => {
                     </CardDescription>
                   </CardHeader>
                 </Card>
+              </div>
+            </div>
+          </section>
+
+          <section id="calculator" className="py-20 px-4 bg-white">
+            <div className="container mx-auto max-w-4xl">
+              <div className="text-center mb-12">
+                <h2 className="text-4xl font-bold mb-4">Калькулятор стоимости</h2>
+                <p className="text-xl text-muted-foreground">Рассчитайте стоимость доставки вашего груза за несколько секунд</p>
+              </div>
+              <Card className="shadow-xl">
+                <CardContent className="pt-6">
+                  <div className="grid md:grid-cols-2 gap-6">
+                    <div className="space-y-4">
+                      <div>
+                        <Label htmlFor="distance" className="text-base font-semibold">Расстояние (км)</Label>
+                        <Input
+                          id="distance"
+                          type="number"
+                          placeholder="Например: 500"
+                          value={calcDistance}
+                          onChange={(e) => setCalcDistance(e.target.value)}
+                          className="mt-2"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="weight" className="text-base font-semibold">Вес груза (кг)</Label>
+                        <Input
+                          id="weight"
+                          type="number"
+                          placeholder="Например: 1000"
+                          value={calcWeight}
+                          onChange={(e) => setCalcWeight(e.target.value)}
+                          className="mt-2"
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-4">
+                      <div>
+                        <Label htmlFor="cargoType" className="text-base font-semibold">Тип груза</Label>
+                        <Select value={calcCargoType} onValueChange={setCalcCargoType}>
+                          <SelectTrigger id="cargoType" className="mt-2">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="standard">Стандартный</SelectItem>
+                            <SelectItem value="fragile">Хрупкий (+40%)</SelectItem>
+                            <SelectItem value="express">Экспресс (+80%)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label htmlFor="urgency" className="text-base font-semibold">Срочность</Label>
+                        <Select value={calcUrgency} onValueChange={setCalcUrgency}>
+                          <SelectTrigger id="urgency" className="mt-2">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="normal">Обычная</SelectItem>
+                            <SelectItem value="urgent">Срочная (+60%)</SelectItem>
+                            <SelectItem value="express">Экспресс (+100%)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="mt-6">
+                    <Button onClick={calculatePrice} size="lg" className="w-full">
+                      <Icon name="Calculator" size={20} className="mr-2" />
+                      Рассчитать стоимость
+                    </Button>
+                  </div>
+                  {calculatedPrice !== null && (
+                    <div className="mt-6 p-6 bg-primary/5 rounded-lg border-2 border-primary animate-in fade-in slide-in-from-bottom-4">
+                      <div className="text-center">
+                        <p className="text-sm text-muted-foreground mb-2">Стоимость доставки</p>
+                        <p className="text-4xl font-bold text-primary">{calculatedPrice.toLocaleString('ru-RU')} ₽</p>
+                        <p className="text-sm text-muted-foreground mt-3">Расчет включает все факторы: расстояние, вес, тип груза и срочность</p>
+                        <Button variant="outline" size="sm" className="mt-4">
+                          <Icon name="FileText" size={16} className="mr-2" />
+                          Получить коммерческое предложение
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+              <div className="grid md:grid-cols-3 gap-6 mt-8">
+                <div className="text-center p-4">
+                  <Icon name="Zap" size={32} className="mx-auto text-primary mb-3" />
+                  <h3 className="font-semibold mb-2">Быстрый расчет</h3>
+                  <p className="text-sm text-muted-foreground">Мгновенная оценка стоимости на основе актуальных тарифов</p>
+                </div>
+                <div className="text-center p-4">
+                  <Icon name="Shield" size={32} className="mx-auto text-primary mb-3" />
+                  <h3 className="font-semibold mb-2">Прозрачность</h3>
+                  <p className="text-sm text-muted-foreground">Все факторы ценообразования учитываются автоматически</p>
+                </div>
+                <div className="text-center p-4">
+                  <Icon name="TrendingDown" size={32} className="mx-auto text-primary mb-3" />
+                  <h3 className="font-semibold mb-2">Оптимизация</h3>
+                  <p className="text-sm text-muted-foreground">Система подбирает оптимальный маршрут для снижения цены</p>
+                </div>
               </div>
             </div>
           </section>
